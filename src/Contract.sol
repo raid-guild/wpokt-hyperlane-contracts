@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.4;
+pragma solidity >=0.8.0;
 
-contract Contract {
+import {IMessageRecipient} from "@hyperlane/interfaces/IMessageRecipient.sol";
+import {IInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecurityModule.sol";
+
+abstract contract WarpController is IMessageRecipient, IInterchainSecurityModule {
     uint256 public immutable param;
 
     constructor(uint256 param_) {
