@@ -5,7 +5,6 @@ import {IMailbox} from "../lib/hyperlane-monorepo/solidity/contracts/interfaces/
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 abstract contract WarpController is IMailbox {
-
     address private _mailbox;
     address private _token;
 
