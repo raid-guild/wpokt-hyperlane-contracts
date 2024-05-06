@@ -4,10 +4,10 @@ pragma solidity >=0.8.20;
 import {ILimiter} from "@interfaces/ILimiter.sol";
 
 abstract contract Limiter is ILimiter {
-    uint256 private _currentMintLimit = 335_000 ether;
+    uint256 private _currentMintLimit;
     uint256 public lastMint;
-    uint256 public maxMintLimit = 335_000 ether;
-    uint256 public mintPerSecond = 3.8773 ether;
+    uint256 public maxMintLimit;
+    uint256 public mintPerSecond;
 
     /// @notice Sets the mint limit and mint per second cooldown rate.
     /// @dev Can only be called by admin.
@@ -17,6 +17,9 @@ abstract contract Limiter is ILimiter {
     function _setMintCooldown(uint256 newLimit, uint256 newMintPerSecond) internal virtual {
         if (newLimit < mintPerSecond) {
             revert InvalidCooldownConfig();
+        }
+        if (maxMintLimit == 0) {
+            _currentMintLimit = newLimit;
         }
         maxMintLimit = newLimit;
         mintPerSecond = newMintPerSecond;

@@ -7,4 +7,8 @@ interface ILimiter {
 
     event MintCooldownSet(uint256 newLimit, uint256 newCooldown);
     event CurrentMintLimit(uint256 indexed limit, uint256 indexed lastMint);
+
+    function lastMintLimit() external view returns (uint256);
+
+    function currentMintLimit() external view returns (uint256);
 }
