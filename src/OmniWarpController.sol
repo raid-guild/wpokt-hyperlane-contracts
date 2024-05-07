@@ -4,11 +4,11 @@ pragma solidity >=0.8.20;
 import {IMailbox} from "../lib/hyperlane-monorepo/solidity/contracts/interfaces/IMailbox.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IOmniToken} from "@interfaces/IOmniToken.sol";
-import {IWarpController} from "@interfaces/IWarpController.sol";
+import {IOmniWarpController} from "@interfaces/IOmniWarpController.sol";
 import {Message} from "@hyperlane/libs/Message.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-abstract contract WarpController is AccessControl, IMailbox, IOmniToken, IWarpController {
+abstract contract OmniWarpController is AccessControl, IMailbox, IOmniToken, IOmniWarpController {
     using Message for bytes;
 
     bytes32 public constant MAIL_BOX_ROLE = keccak256("MAIL_BOX_ROLE");

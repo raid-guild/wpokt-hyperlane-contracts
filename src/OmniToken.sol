@@ -2,20 +2,23 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {ERC20Pausable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IOmniToken} from "@interfaces/IOmniToken.sol";
-import {ERC20Burnable} from "@openzeppelin/token/ERC20/extensions/ERC20Burnable.sol";
 
-contract OmniToken is ERC20, ERC20Burnable, AccessControl, IOmniToken {
+contract OmniToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl, ERC20Permit, IOmniToken {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     address public mintController;
 
-    constructor(address defaultAdmin, address minter, string memory name, string memory symbol) ERC20(name, symbol) {
+    constructor(address defaultAdmin, address minter, address pauser, string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(MINTER_ROLE, minter);
+        _grantRole(PAUSER_ROLE, pauser);
         mintController = minter;
     }
 
@@ -39,9 +42,24 @@ contract OmniToken is ERC20, ERC20Burnable, AccessControl, IOmniToken {
         super.burnFrom(account, amount);
     }
 
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+
     /*///////////////////////////////////////////////
     //              OVERRIDE
     ///////////////////////////////////////////////*/
+
+    function _update(address from, address to, uint256 value)
+        internal
+        override(ERC20, ERC20Pausable)
+    {
+        super._update(from, to, value);
+    }
 
     function burn(uint256) public pure override(ERC20Burnable) {
         revert BurnDisabled();
