@@ -18,7 +18,9 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
 
     uint256 public constant SIGNATURE_SIZE = 65;
 
-    bytes32 public constant DIGEST_TYPE_HASH = keccak256("address sender,uint256 amount,address recipient");
+    bytes32 public constant DIGEST_TYPE_HASH = keccak256(
+        "uint8 version,uint32 nonce,uint32 originDomain,bytes32 sender,uint32 destinationDomain,bytes32 recipient,bytes messageBody"
+    );
 
     constructor(string memory name_, string memory version_, address initialOwner_)
         EIP712(name_, version_)
@@ -29,13 +31,35 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
     // Public View
     //////////////////////////////////////////////////////////////*/
 
-    function verify(bytes calldata _metadata, bytes calldata _message) external view returns (bool success) {
-        bytes memory messageBody = _message.body();
-        success = _verify(_metadata, messageBody);
+    function verify(bytes calldata metadata, bytes calldata message) external view returns (bool success) {
+        success = _verify(metadata, message);
     }
 
-    function getDigest(bytes memory messageBody) public view returns (bytes32 digest) {
-        digest = _hashTypedDataV4(keccak256(abi.encode(DIGEST_TYPE_HASH, messageBody)));
+    function getDigest(bytes memory message) public view returns (bytes32 digest) {
+        (
+            uint8 version,
+            uint32 nonce,
+            uint32 originDomain,
+            bytes32 sender,
+            uint32 destinationDomain,
+            bytes32 recipient,
+            bytes memory messageBody
+        ) = abi.decode(message, (uint8, uint32, uint32, bytes32, uint32, bytes32, bytes));
+
+        digest = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    DIGEST_TYPE_HASH,
+                    version,
+                    nonce,
+                    originDomain,
+                    sender,
+                    destinationDomain,
+                    recipient,
+                    keccak256(messageBody)
+                )
+            )
+        );
     }
 
     // @dev Separates aggregated signatures into an array of individual signatures
@@ -58,8 +82,8 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
     // Internal
     //////////////////////////////////////////////////////////////*/
 
-    function _verify(bytes calldata metadata, bytes memory messageBody) internal view returns (bool) {
-        bytes32 digest = getDigest(messageBody);
+    function _verify(bytes calldata metadata, bytes memory message) internal view returns (bool) {
+        bytes32 digest = getDigest(message);
         bytes[] memory signatures = getSignatures(metadata);
 
         address lastSigner;
