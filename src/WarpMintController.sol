@@ -1,26 +1,29 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.20;
 
-import {IMailbox} from "../lib/hyperlane-monorepo/solidity/contracts/interfaces/IMailbox.sol";
+import {IMailbox} from "@hyperlane/interfaces/IMailbox.sol";
+import {IInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecurityModule.sol";
+import {Message} from "@hyperlane/libs/Message.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IOmniToken} from "@interfaces/IOmniToken.sol";
-import {IOmniWarpController} from "@interfaces/IOmniWarpController.sol";
-import {Message} from "@hyperlane/libs/Message.sol";
+import {IWarpController} from "@interfaces/IWarpController.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-abstract contract OmniWarpController is AccessControl, IMailbox, IOmniToken, IOmniWarpController {
+abstract contract WarpMintController is AccessControl, IMailbox, IOmniToken, IWarpController {
     using Message for bytes;
 
     bytes32 public constant MAIL_BOX_ROLE = keccak256("MAIL_BOX_ROLE");
 
     IMailbox private _mailbox;
     IOmniToken private _token;
+    IInterchainSecurityModule private _ism;
 
-    constructor(address mailbox_, address token_, address defaultAdmin) {
+    constructor(address mailbox_, address token_, address ism_, address defaultAdmin) {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(MAIL_BOX_ROLE, mailbox_);
         _mailbox = IMailbox(mailbox_);
         _token = IOmniToken(token_);
+        _ism = IInterchainSecurityModule(ism_);
     }
 
     /*///////////////////////////////////////////////
@@ -36,6 +39,12 @@ abstract contract OmniWarpController is AccessControl, IMailbox, IOmniToken, IOm
         _token.mint(recipient, amount);
     }
 
+    // @notice This function allows the admin to change the inter-chain security module
+    // @param ism_ The new interchain security module contract address
+    function setIsm(address ism_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _ism = IInterchainSecurityModule(ism_);
+    }
+
     /*///////////////////////////////////////////////
     //              PUBLIC MUTATIVE
     ///////////////////////////////////////////////*/
@@ -45,7 +54,7 @@ abstract contract OmniWarpController is AccessControl, IMailbox, IOmniToken, IOm
     function fulfillOrder(bytes calldata metadata, bytes calldata message) public virtual {
         // Process the message through the mailbox and interchain security module
         // Note that the mailbox already checks that the message is not a duplicate
-        // Mailbox will callback to this contract's `handle` function
+        // Mailbox will callback to the `interchainSecurityModule` method and then this contract's `handle` function
         _mailbox.process(metadata, message);
         // Get the message ID
         bytes32 orderId = message.id();
@@ -66,5 +75,16 @@ abstract contract OmniWarpController is AccessControl, IMailbox, IOmniToken, IOm
         // Initiate the order through the mailbox
         // The backend consumes the dispatch event emitted by the mailbox
         _mailbox.dispatch(destinationDomain, recipientAddress, messageBody);
+    }
+
+    /*///////////////////////////////////////////////
+    //              PUBLIC VIEW
+    ///////////////////////////////////////////////*/
+    // @notice This function returns the ism contract interface
+    function interchainSecurityModule()
+        external
+        view
+        returns (IInterchainSecurityModule) {
+        return _ism;
     }
 }
