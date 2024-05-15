@@ -15,7 +15,10 @@ contract OmniToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl, ERC20P
 
     address public mintController;
 
-    constructor(address defaultAdmin, address minter, address pauser, string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
+    constructor(address defaultAdmin, address minter, address pauser, string memory name, string memory symbol)
+        ERC20(name, symbol)
+        ERC20Permit(name)
+    {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(MINTER_ROLE, minter);
         _grantRole(PAUSER_ROLE, pauser);
@@ -54,10 +57,7 @@ contract OmniToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl, ERC20P
     //              OVERRIDE
     ///////////////////////////////////////////////*/
 
-    function _update(address from, address to, uint256 value)
-        internal
-        override(ERC20, ERC20Pausable)
-    {
+    function _update(address from, address to, uint256 value) internal override(ERC20, ERC20Pausable) {
         super._update(from, to, value);
     }
 

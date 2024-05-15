@@ -81,10 +81,7 @@ abstract contract WarpMintController is AccessControl, IMailbox, IOmniToken, IWa
     //              PUBLIC VIEW
     ///////////////////////////////////////////////*/
     // @notice This function returns the ism contract interface
-    function interchainSecurityModule()
-        external
-        view
-        returns (IInterchainSecurityModule) {
+    function interchainSecurityModule() external view returns (IInterchainSecurityModule) {
         return _ism;
     }
 }
