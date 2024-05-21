@@ -4,12 +4,11 @@ pragma solidity >=0.8.20;
 import {IMailbox} from "@hyperlane/interfaces/IMailbox.sol";
 import {IInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecurityModule.sol";
 import {Message} from "@hyperlane/libs/Message.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IOmniToken} from "@interfaces/IOmniToken.sol";
 import {IWarpController} from "@interfaces/IWarpController.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-abstract contract WarpMintController is AccessControl, IMailbox, IOmniToken, IWarpController {
+abstract contract WarpMintController is AccessControl, IWarpController {
     using Message for bytes;
 
     bytes32 public constant MAIL_BOX_ROLE = keccak256("MAIL_BOX_ROLE");
@@ -32,7 +31,7 @@ abstract contract WarpMintController is AccessControl, IMailbox, IOmniToken, IWa
 
     // @notice This function allows the mailbox contract to fulfill the order after authenticating through the ISM
     // @param _messageBody The message body
-    function handle(uint32, bytes32, bytes calldata _messageBody) external onlyRole(MAIL_BOX_ROLE) {
+    function handle(uint32, bytes32, bytes calldata _messageBody) external virtual onlyRole(MAIL_BOX_ROLE) {
         // Decode the message body
         (address recipient, uint256 amount,) = abi.decode(_messageBody, (address, uint256, address));
         // Mint the tokens to the recipient
@@ -41,7 +40,7 @@ abstract contract WarpMintController is AccessControl, IMailbox, IOmniToken, IWa
 
     // @notice This function allows the admin to change the inter-chain security module
     // @param ism_ The new interchain security module contract address
-    function setIsm(address ism_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setIsm(address ism_) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         _ism = IInterchainSecurityModule(ism_);
     }
 
@@ -81,7 +80,7 @@ abstract contract WarpMintController is AccessControl, IMailbox, IOmniToken, IWa
     //              PUBLIC VIEW
     ///////////////////////////////////////////////*/
     // @notice This function returns the ism contract interface
-    function interchainSecurityModule() external view returns (IInterchainSecurityModule) {
+    function interchainSecurityModule() external view virtual returns (IInterchainSecurityModule) {
         return _ism;
     }
 }
