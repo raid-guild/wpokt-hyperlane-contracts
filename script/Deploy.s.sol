@@ -2,12 +2,21 @@
 pragma solidity ^0.8.13;
 
 import {CREATE3Script} from "./base/CREATE3Script.sol";
+import {PausableIsm} from "@hyperlane/isms/PausableIsm.sol";
+
+import {console2} from "forge-std/console2.sol";
 
 contract DeployScript is CREATE3Script {
     constructor() CREATE3Script(vm.envString("VERSION")) {}
 
-    function run() external {
+    address internal _deployer;
+
+    function deployPausableIsm() external {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        _deployer = vm.rememberKey(deployerPrivateKey);
+
+        console2.log("Deploying PausableIsm...");
+        console2.log("Deployer: ", _deployer);
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -19,6 +28,18 @@ contract DeployScript is CREATE3Script {
             )
         ); 
         */
+
+        bytes32 salt = getCreate3ContractSalt("PausableIsm");
+
+        address predeterminedISM = getCreate3Contract("PausableIsm");
+
+        console2.log("PredeterminedISM: ", predeterminedISM);
+
+        bytes creationCode = bytes.concat(type(PausableIsm).creationCode, abi.encode(param));
+
+        address ism = create3.deploy(salt, creationCode);
+
+        console2.log("ISM: ", ism);
 
         vm.stopBroadcast();
     }
