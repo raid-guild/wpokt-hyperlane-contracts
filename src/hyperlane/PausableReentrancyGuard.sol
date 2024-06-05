@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity >=0.8.20;
 
-import "@openzeppelin-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // adapted from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 abstract contract PausableReentrancyGuardUpgradeable is Initializable {

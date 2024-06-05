@@ -2,8 +2,8 @@
 pragma solidity >=0.8.20;
 
 // ============ External Imports ============
-import {Pausable} from "@openzeppelin/utils/Pausable.sol";
-import {Ownable} from "@openzeppelin/access/Ownable.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // ============ Internal Imports ============
 import {IInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecurityModule.sol";

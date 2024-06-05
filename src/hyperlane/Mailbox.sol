@@ -12,8 +12,8 @@ import {IMailbox} from "@hyperlane/interfaces/IMailbox.sol";
 import {PausableReentrancyGuardUpgradeable} from "./PausableReentrancyGuard.sol";
 
 // ============ External Imports ============
-import {Address} from "@openzeppelin/utils/Address.sol";
-import {OwnableUpgradeable} from "@openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract Mailbox is
     IMailbox,
@@ -80,8 +80,7 @@ contract Mailbox is
         initializer
     {
         __PausableReentrancyGuard_init();
-        __Ownable_init();
-        transferOwnership(_owner);
+        __Ownable_init(_owner);
         _setDefaultIsm(_defaultIsm);
     }
 
@@ -253,7 +252,7 @@ contract Mailbox is
      * @param _module The new default ISM. Must be a contract.
      */
     function _setDefaultIsm(address _module) internal {
-        require(Address.isContract(_module), "!contract");
+        require(_module.code.length > 0, "!contract");
         defaultIsm = IInterchainSecurityModule(_module);
         emit DefaultIsmSet(_module);
     }
