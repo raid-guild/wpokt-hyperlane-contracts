@@ -19,7 +19,7 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
     uint256 public constant SIGNATURE_SIZE = 65;
 
     bytes32 public constant DIGEST_TYPE_HASH = keccak256(
-        "uint8 version,uint32 nonce,uint32 originDomain,bytes32 sender,uint32 destinationDomain,bytes32 recipient,bytes messageBody"
+        "Message(uint8 version,uint32 nonce,uint32 originDomain,bytes32 sender,uint32 destinationDomain,bytes32 recipient,bytes messageBody)"
     );
 
     constructor(string memory name_, string memory version_, address initialOwner_)

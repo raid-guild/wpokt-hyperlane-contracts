@@ -7,6 +7,7 @@ import {console2} from "forge-std/console2.sol";
 
 import {PausableIsm} from "src/hyperlane/PausableIsm.sol";
 import {Mailbox} from "src/hyperlane/Mailbox.sol";
+import {WarpISM} from "src/WarpISM.sol";
 import {OmniToken} from "src/OmniToken.sol";
 import {wPOKTMintController} from "src/wPOKTMintController.sol";
 
@@ -15,8 +16,9 @@ contract DeployScript is Script {
 
     address internal _deployer;
     address internal _owner;
-    PausableIsm internal _ism;
+    PausableIsm internal _defaultIsm;
     Mailbox internal _mailbox;
+    WarpISM internal _warpISM;
     OmniToken internal _token;
     wPOKTMintController internal _mintController;
     uint32 internal _chainId;
@@ -24,7 +26,6 @@ contract DeployScript is Script {
 
     uint256 internal constant _mintLimit = 10 ** 18;
     uint256 internal constant _mintPerSecond = 10 ** 16;
-
 
 
     function run() external {
@@ -40,20 +41,26 @@ contract DeployScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        address _predictedIsm = vm.computeCreateAddress(_deployer, _nonce++);
-        console2.log("Deploying PausableIsm at: ", _predictedIsm);
-        _ism = new PausableIsm(_owner);
-        console2.log("Deployed PausableIsm at: ", address(_ism));
-        assert(address(_ism) == _predictedIsm);
+        address _predictedDefaultIsm = vm.computeCreateAddress(_deployer, _nonce++);
+        console2.log("Deploying PausableIsm at: ", _predictedDefaultIsm);
+        _defaultIsm = new PausableIsm(_owner);
+        console2.log("Deployed PausableIsm at: ", address(_defaultIsm));
+        assert(address(_defaultIsm) == _predictedDefaultIsm);
 
         address _predictedMailbox = vm.computeCreateAddress(_deployer, _nonce++);
         console2.log("Deploying Mailbox at: ", _predictedMailbox);
         _mailbox = new Mailbox(_chainId);
-        _mailbox.initialize(_owner, address(_ism));
+        _mailbox.initialize(_owner, address(_defaultIsm));
         console2.log("Deployed Mailbox at: ", address(_mailbox));
         assert(address(_mailbox) == _predictedMailbox);
 
         _nonce+=1;
+
+        address _preditectWarpISM = vm.computeCreateAddress(_deployer, _nonce++);
+        console2.log("Deploying WarpISM at: ", _preditectWarpISM);
+        _warpISM = new WarpISM("WarpISM", "1", _owner);
+        console2.log("Deployed WarpISM at: ", address(_warpISM));
+        assert(address(_warpISM) == _preditectWarpISM);
 
         address _predictedToken = vm.computeCreateAddress(_deployer, _nonce++);
         address _predictedMintController = vm.computeCreateAddress(_deployer, _nonce++);
@@ -64,7 +71,7 @@ contract DeployScript is Script {
         assert(address(_token) == _predictedToken);
 
         console2.log("Deploying MintController at: ", _predictedMintController);
-        _mintController = new wPOKTMintController(address(_mailbox), address(_token), address(_ism), _owner, _mintLimit, _mintPerSecond);
+        _mintController = new wPOKTMintController(address(_mailbox), address(_token), address(_warpISM), _owner, _mintLimit, _mintPerSecond);
         console2.log("Deployed MintController at: ", address(_mintController));
         assert(address(_mintController) == _predictedMintController);
 
