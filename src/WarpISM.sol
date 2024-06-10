@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.20;
 
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {EIP712} from "@open-zeppelin/contracts/utils/cryptography/EIP712.sol";
+import {ECDSA} from "@open-zeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {Ownable} from "@open-zeppelin/contracts/access/Ownable.sol";
 import {IWarpISM} from "@interfaces/IWarpISM.sol";
 import {Message} from "@hyperlane/libs/Message.sol";
 
@@ -24,8 +24,9 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
 
     constructor(string memory name_, string memory version_, address initialOwner_)
         EIP712(name_, version_)
-        Ownable(initialOwner_)
-    {}
+    {
+        transferOwnership(initialOwner_);
+    }
 
     /*//////////////////////////////////////////////////////////////
     // Public View

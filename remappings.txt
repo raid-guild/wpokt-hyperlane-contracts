@@ -2,5 +2,6 @@ ds-test/=lib/hyperlane-monorepo/solidity/lib/forge-std/lib/ds-test/src/
 forge-std/=lib/hyperlane-monorepo/solidity/lib/forge-std/src/
 @hyperlane/=lib/hyperlane-monorepo/solidity/contracts/
 @interfaces/=src/interfaces/
-@openzeppelin/=lib/openzeppelin-contracts/contracts/
+@open-zeppelin/=lib/@openzeppelin/
 @src/=src/
+@create3/=lib/create3-factory/src/

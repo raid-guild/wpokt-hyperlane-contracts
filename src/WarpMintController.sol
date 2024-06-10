@@ -6,7 +6,7 @@ import {IInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecuri
 import {Message} from "@hyperlane/libs/Message.sol";
 import {IOmniToken} from "@interfaces/IOmniToken.sol";
 import {IWarpController} from "@interfaces/IWarpController.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControl} from "@open-zeppelin/contracts/access/AccessControl.sol";
 
 abstract contract WarpMintController is AccessControl, IWarpController {
     using Message for bytes;
