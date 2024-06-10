@@ -14,7 +14,7 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
     mapping(address => bool) public validators;
 
     uint256 public validatorCount;
-    uint256 public signerThreshold = 50; // out of 100
+    uint256 public signerThreshold = 7; // out of validator count
 
     uint256 public constant SIGNATURE_SIZE = 65;
 
@@ -22,9 +22,7 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
         "uint8 version,uint32 nonce,uint32 originDomain,bytes32 sender,uint32 destinationDomain,bytes32 recipient,bytes messageBody"
     );
 
-    constructor(string memory name_, string memory version_, address initialOwner_)
-        EIP712(name_, version_)
-    {
+    constructor(string memory name_, string memory version_, address initialOwner_) EIP712(name_, version_) {
         transferOwnership(initialOwner_);
     }
 

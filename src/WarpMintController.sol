@@ -33,9 +33,10 @@ abstract contract WarpMintController is AccessControl, IWarpController {
     // @param _messageBody The message body
     function handle(uint32, bytes32, bytes calldata _messageBody) external virtual onlyRole(MAIL_BOX_ROLE) {
         // Decode the message body
-        (address recipient, uint256 amount,) = abi.decode(_messageBody, (address, uint256, address));
+        (address recipient, uint256 amount, address sender) = abi.decode(_messageBody, (address, uint256, address));
         // Mint the tokens to the recipient
         _token.mint(recipient, amount);
+        emit WarpMint(recipient, amount, sender);
     }
 
     // @notice This function allows the admin to change the inter-chain security module

@@ -59,8 +59,11 @@ contract OmniToken is ERC20, ERC20Burnable, ERC20Pausable, AccessControl, ERC20P
         revert BurnDisabled();
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override (ERC20Pausable, ERC20) {
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
+        internal
+        virtual
+        override(ERC20Pausable, ERC20)
+    {
         super._beforeTokenTransfer(from, to, amount);
-
     }
 }
