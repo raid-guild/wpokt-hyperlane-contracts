@@ -10,7 +10,6 @@ verbosity = 4
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC}"
 sepolia = "${SEPOLIA_RPC}"
-localhost = "http://localhost:8545"
 
 [etherscan]
 mainnet = {key = "${ETHERSCAN_KEY}"}
