@@ -35,28 +35,18 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
         success = _verify(metadata, message);
     }
 
-    function getDigest(bytes memory message) public view returns (bytes32 digest) {
-        (
-            uint8 version,
-            uint32 nonce,
-            uint32 originDomain,
-            bytes32 sender,
-            uint32 destinationDomain,
-            bytes32 recipient,
-            bytes memory messageBody
-        ) = abi.decode(message, (uint8, uint32, uint32, bytes32, uint32, bytes32, bytes));
-
+    function getDigest(bytes calldata message) public view returns (bytes32 digest) {
         digest = _hashTypedDataV4(
             keccak256(
                 abi.encode(
                     DIGEST_TYPE_HASH,
-                    version,
-                    nonce,
-                    originDomain,
-                    sender,
-                    destinationDomain,
-                    recipient,
-                    keccak256(messageBody)
+                    message.version(),
+                    message.nonce(),
+                    message.origin(),
+                    message.sender(),
+                    message.destination(),
+                    message.recipient(),
+                    keccak256(message.body())
                 )
             )
         );
@@ -82,7 +72,7 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
     // Internal
     //////////////////////////////////////////////////////////////*/
 
-    function _verify(bytes calldata metadata, bytes memory message) internal view returns (bool) {
+    function _verify(bytes calldata metadata, bytes calldata message) internal view returns (bool) {
         bytes32 digest = getDigest(message);
         bytes[] memory signatures = getSignatures(metadata);
 
