@@ -7,7 +7,10 @@ import {MerkleLib} from "@hyperlane/libs/Merkle.sol";
 import {Message} from "@hyperlane/libs/Message.sol";
 import {TypeCasts} from "@hyperlane/libs/TypeCasts.sol";
 import {IMessageRecipient} from "@hyperlane/interfaces/IMessageRecipient.sol";
-import {IInterchainSecurityModule, ISpecifiesInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecurityModule.sol";
+import {
+    IInterchainSecurityModule,
+    ISpecifiesInterchainSecurityModule
+} from "@hyperlane/interfaces/IInterchainSecurityModule.sol";
 import {IMailbox} from "@hyperlane/interfaces/IMailbox.sol";
 import {PausableReentrancyGuardUpgradeable} from "./PausableReentrancyGuard.sol";
 
@@ -15,12 +18,7 @@ import {PausableReentrancyGuardUpgradeable} from "./PausableReentrancyGuard.sol"
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract Mailbox is
-    IMailbox,
-    OwnableUpgradeable,
-    PausableReentrancyGuardUpgradeable,
-    Versioned
-{
+contract Mailbox is IMailbox, OwnableUpgradeable, PausableReentrancyGuardUpgradeable, Versioned {
     // ============ Libraries ============
 
     using MerkleLib for MerkleLib.Tree;
@@ -31,7 +29,7 @@ contract Mailbox is
     // ============ Constants ============
 
     // Maximum bytes per message = 2 KiB (somewhat arbitrarily set to begin)
-    uint256 public constant MAX_MESSAGE_BODY_BYTES = 2 * 2**10;
+    uint256 public constant MAX_MESSAGE_BODY_BYTES = 2 * 2 ** 10;
     // Domain of chain on which the contract is deployed
     uint32 public immutable localDomain;
 
@@ -75,10 +73,7 @@ contract Mailbox is
 
     // ============ Initializers ============
 
-    function initialize(address _owner, address _defaultIsm)
-        external
-        initializer
-    {
+    function initialize(address _owner, address _defaultIsm) external initializer {
         __PausableReentrancyGuard_init();
         __Ownable_init(_owner);
         _setDefaultIsm(_defaultIsm);
@@ -101,11 +96,12 @@ contract Mailbox is
      * @param _messageBody Raw bytes content of message body
      * @return The message ID inserted into the Mailbox's merkle tree
      */
-    function dispatch(
-        uint32 _destinationDomain,
-        bytes32 _recipientAddress,
-        bytes calldata _messageBody
-    ) external override notPaused returns (bytes32) {
+    function dispatch(uint32 _destinationDomain, bytes32 _recipientAddress, bytes calldata _messageBody)
+        external
+        override
+        notPaused
+        returns (bytes32)
+    {
         require(_messageBody.length <= MAX_MESSAGE_BODY_BYTES, "msg too long");
         // Format the message into packed bytes.
         bytes memory _message = Message.formatMessage(
@@ -121,12 +117,7 @@ contract Mailbox is
         // Insert the message ID into the merkle tree.
         bytes32 _id = _message.id();
         tree.insert(_id);
-        emit Dispatch(
-            msg.sender,
-            _destinationDomain,
-            _recipientAddress,
-            _message
-        );
+        emit Dispatch(msg.sender, _destinationDomain, _recipientAddress, _message);
         emit DispatchId(_id);
         return _id;
     }
@@ -137,11 +128,7 @@ contract Mailbox is
      * @param _metadata Metadata used by the ISM to verify `_message`.
      * @param _message Formatted Hyperlane message (refer to Message.sol).
      */
-    function process(bytes calldata _metadata, bytes calldata _message)
-        external
-        override
-        nonReentrantAndNotPaused
-    {
+    function process(bytes calldata _metadata, bytes calldata _message) external override nonReentrantAndNotPaused {
         // Check that the message was intended for this mailbox.
         require(_message.version() == VERSION, "!version");
         require(_message.destination() == localDomain, "!destination");
@@ -152,9 +139,7 @@ contract Mailbox is
         delivered[_id] = true;
 
         // Verify the message via the ISM.
-        IInterchainSecurityModule _ism = IInterchainSecurityModule(
-            recipientIsm(_message.recipientAddress())
-        );
+        IInterchainSecurityModule _ism = IInterchainSecurityModule(recipientIsm(_message.recipientAddress()));
         require(_ism.verify(_metadata, _message), "!module");
 
         // Deliver the message to the recipient.
@@ -223,19 +208,14 @@ contract Mailbox is
      * @param _recipient The message recipient whose ISM should be returned.
      * @return The ISM to use for `_recipient`.
      */
-    function recipientIsm(address _recipient)
-        public
-        view
-        returns (IInterchainSecurityModule)
-    {
+    function recipientIsm(address _recipient) public view returns (IInterchainSecurityModule) {
         // Use a default interchainSecurityModule if one is not specified by the
         // recipient.
         // This is useful for backwards compatibility and for convenience as
         // recipients are not mandated to specify an ISM.
-        try
-            ISpecifiesInterchainSecurityModule(_recipient)
-                .interchainSecurityModule()
-        returns (IInterchainSecurityModule _val) {
+        try ISpecifiesInterchainSecurityModule(_recipient).interchainSecurityModule() returns (
+            IInterchainSecurityModule _val
+        ) {
             // If the recipient specifies a zero address, use the default ISM.
             if (address(_val) != address(0)) {
                 return _val;

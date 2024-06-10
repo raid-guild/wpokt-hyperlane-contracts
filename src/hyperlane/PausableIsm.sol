@@ -11,19 +11,13 @@ import {IInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecuri
 contract PausableIsm is IInterchainSecurityModule, Ownable, Pausable {
     uint8 public constant override moduleType = uint8(Types.NULL);
 
-        constructor(address owner) Ownable(owner) Pausable() {
-    }
+    constructor(address owner) Ownable(owner) Pausable() {}
 
     /**
      * @inheritdoc IInterchainSecurityModule
      * @dev Reverts when paused, otherwise returns `true`.
      */
-    function verify(bytes calldata, bytes calldata)
-        external
-        view
-        whenNotPaused
-        returns (bool)
-    {
+    function verify(bytes calldata, bytes calldata) external view whenNotPaused returns (bool) {
         return true;
     }
 
