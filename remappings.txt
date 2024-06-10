@@ -3,5 +3,6 @@ forge-std/=lib/hyperlane-monorepo/solidity/lib/forge-std/src/
 @hyperlane/=lib/hyperlane-monorepo/solidity/contracts/
 @interfaces/=src/interfaces/
 @open-zeppelin/=lib/@openzeppelin/
+@openzeppelin/=lib/@openzeppelin/
 @src/=src/
 @create3/=lib/create3-factory/src/
