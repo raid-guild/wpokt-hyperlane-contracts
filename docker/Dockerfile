@@ -16,4 +16,4 @@ ENV CHAIN_ID ${CHAIN_ID}
 ENV PRIVATE_KEY "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 
 # Run the application
-CMD ["/app/docker/entrypoint.sh"]
+ENTRYPOINT ["/app/docker/entrypoint.sh"]
