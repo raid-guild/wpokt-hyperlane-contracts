@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -m
+set -em
 
 anvil --mnemonic 'test test test test test test test test test test test junk' --host 0.0.0.0 --block-time 1 --chain-id ${CHAIN_ID} --port ${PORT} --silent &
 

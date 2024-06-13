@@ -86,10 +86,12 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
             revert InvalidSignatures();
         }
 
-        for (uint256 i = 0; i < signatureCount; i++) {
+        for (uint256 i = 0; i < signatureCount;) {
             currentSigner = digest.recover(signatures[i]);
             if (validators[currentSigner] && currentSigner > lastSigner) {
-                validSignatures++;
+                unchecked {
+                    ++validSignatures;
+                }
                 lastSigner = currentSigner;
             }
             unchecked {
