@@ -10,6 +10,7 @@ import {Mailbox} from "src/hyperlane/Mailbox.sol";
 import {WarpISM} from "src/WarpISM.sol";
 import {OmniToken} from "src/OmniToken.sol";
 import {wPOKTMintController} from "src/wPOKTMintController.sol";
+import {AccountFactory} from "src/Account.sol";
 
 contract DeployScript is Script {
     constructor() {}
@@ -21,6 +22,7 @@ contract DeployScript is Script {
     WarpISM internal _warpISM;
     OmniToken internal _token;
     wPOKTMintController internal _mintController;
+    AccountFactory internal _accountFactory;
     uint32 internal _chainId;
     uint256 internal _nonce;
 
@@ -99,6 +101,11 @@ contract DeployScript is Script {
         }
 
         _warpISM.setSignerThreshold(_config.signerThreshold);
+
+
+        console2.log("Deploying AccountFactory");
+        _accountFactory = new AccountFactory();
+        console2.log("Deployed AccountFactory at: ", address(_accountFactory));
 
         vm.stopBroadcast();
     }
