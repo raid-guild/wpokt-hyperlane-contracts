@@ -10,8 +10,11 @@ evm_version = 'paris'
 fuzz_runs = 100_000
 verbosity = 4
 
+
 [rpc_endpoints]
-mainnet = "${RPC_URL_MAINNET}"
+mainnet = "${MAINNET_RPC}"
+sepolia = "${SEPOLIA_RPC}"
 
 [etherscan]
 mainnet = {key = "${ETHERSCAN_KEY}"}
+sepolia = {key = "${ETHERSCAN_KEY}"}
