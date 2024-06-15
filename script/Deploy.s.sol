@@ -11,6 +11,7 @@ import {WarpISM} from "src/WarpISM.sol";
 import {OmniToken} from "src/OmniToken.sol";
 import {wPOKTMintController} from "src/wPOKTMintController.sol";
 import {AccountFactory} from "src/Account.sol";
+import {Multicall3} from "src/Multicall3.sol";
 
 contract DeployScript is Script {
     constructor() {}
@@ -23,6 +24,7 @@ contract DeployScript is Script {
     OmniToken internal _token;
     wPOKTMintController internal _mintController;
     AccountFactory internal _accountFactory;
+    Multicall3 internal _multicall3;
     uint32 internal _chainId;
     uint256 internal _nonce;
 
@@ -102,10 +104,13 @@ contract DeployScript is Script {
 
         _warpISM.setSignerThreshold(_config.signerThreshold);
 
-
         console2.log("Deploying AccountFactory");
         _accountFactory = new AccountFactory();
         console2.log("Deployed AccountFactory at: ", address(_accountFactory));
+
+        console2.log("Deploying Multicall3");
+        _multicall3 = new Multicall3();
+        console2.log("Deployed Multicall3 at: ", address(_multicall3));
 
         vm.stopBroadcast();
     }

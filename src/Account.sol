@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Account  {
+contract Account {
     uint256 public state;
     address public owner;
 
