@@ -3,6 +3,8 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import {Message} from "@hyperlane/libs/Message.sol";
+import {MessageMock} from "./mocks/MessageMock.sol";
+import {TypeCasts} from "@hyperlane/libs/TypeCasts.sol";
 import {CREATE3Factory} from "@create3/CREATE3Factory.sol";
 import {wPOKTMintController} from "@src/wPOKTMintController.sol";
 import {Mailbox} from "@hyperlane/Mailbox.sol";
@@ -12,6 +14,10 @@ import "@hyperlane/test/TestPostDispatchHook.sol";
 import "@hyperlane/test/TestRecipient.sol";
 
 contract ContractTest is Test {
+    using Message for bytes;
+    using TypeCasts for bytes32;
+    using TypeCasts for address;
+
     address[] public signers;
     address public admin = address(1000);
     bytes32 public minterRole;
@@ -23,12 +29,16 @@ contract ContractTest is Test {
     TestPostDispatchHook overrideHook;
     TestPostDispatchHook requiredHook;
 
+    MessageMock public _message;
+
     TestRecipient feeRecipient;
 
     wPOKTMintController public mintController;
     Mailbox public mailbox;
     OmniToken public token;
     WarpISM public warpISM;
+
+    bytes public globalMessage;
 
     string public constant _NAME = "WarpISM";
     string public constant _VERSION = "1.0";
@@ -69,10 +79,6 @@ contract ContractTest is Test {
 
     function buildMessageBody(address recipient, uint256 amount, address sender) public pure returns (bytes memory) {
         return abi.encode(recipient, amount, sender);
-    }
-
-    function toCalldata(bytes calldata data) public pure returns (bytes calldata) {
-        return data;
     }
 
     function buildValidatorArrayAscending(uint256 quantity) public {
@@ -127,23 +133,8 @@ contract ContractTest is Test {
         }
     }
 
-    function setTypeHashes() public {
-        _hashedName = keccak256(bytes(_NAME));
-        _hashedVersion = keccak256(bytes(_VERSION));
-        _cachedChainId = block.chainid;
-        _cachedControllerAddress = address(warpISM);
-        _cachedDomainSeparator = buildDomainSeparator();
-
-        console2.log("Hashed Name:");
-        console2.logBytes32(_hashedName);
-        console2.log("Hashed Version:");
-        console2.logBytes32(_hashedVersion);
-        console2.log("Chain ID:");
-        console2.log(_cachedChainId);
-        console2.log("Controller Address:");
-        console2.log(_cachedControllerAddress);
-        console2.log("Domain Separator:");
-        console2.logBytes32(_cachedDomainSeparator);
+    function getDigest(bytes memory message) public returns (bytes32 digest) {
+        digest = warpISM.getDigest(message);
     }
 
     function _hashTypedDataV4(bytes32 structHash) internal view virtual returns (bytes32) {
@@ -167,23 +158,8 @@ contract ContractTest is Test {
     }
 
     function buildSignatureAsc(bytes memory message, uint256 signerIndex) public view returns (bytes memory) {
-        (
-            uint8 version,
-            uint32 nonce,
-            uint32 originDomain,
-            address sender,
-            uint32 destinationDomain,
-            address recipient,
-            bytes memory messageBody
-        ) = abi.decode(message, (uint8, uint32, uint32, address, uint32, address, bytes));
-
-        bytes32 digest = _hashTypedDataV4(
-            keccak256(
-                abi.encode(
-                    MESSAGE_TYPE_HASH, version, nonce, originDomain, sender, destinationDomain, recipient, keccak256(messageBody)
-                )
-            )
-        );
+        console2.log("Hashing digest:");
+        bytes32 digest = warpISM.getDigest(message);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKeyAsc[signerIndex], digest);
         bytes memory signature = abi.encodePacked(r, s, v);
@@ -191,47 +167,45 @@ contract ContractTest is Test {
     }
 
     function buildSignatureDesc(bytes memory message, uint256 signerIndex) public view returns (bytes memory) {
-        (
-            uint8 version,
-            uint32 nonce,
-            uint32 originDomain,
-            address sender,
-            uint32 destinationDomain,
-            address recipient,
-            bytes memory messageBody
-        ) = abi.decode(message, (uint8, uint32, uint32, address, uint32, address, bytes));
 
-        bytes32 digest = _hashTypedDataV4(
-            keccak256(
-                abi.encode(
-                    MESSAGE_TYPE_HASH,
-                    version,
-                    nonce,
-                    originDomain,
-                    sender,
-                    destinationDomain,
-                    recipient,
-                    keccak256(messageBody)
-                )
-            )
-        );
+        bytes32 digest = warpISM.getDigest(message);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKeyDesc[signerIndex], digest);
         bytes memory signature = abi.encodePacked(r, s, v);
         return signature;
     }
 
-    function buildSignaturesAsc(bytes memory data) public view returns (bytes[] memory) {
+    function buildSignaturesAsc(bytes memory data) public returns (bytes[] memory) {
         console2.log("Building Ascending Signatures");
         bytes[] memory signatures = new bytes[](privKeyAsc.length);
         for (uint256 i = 0; i < signatures.length; i++) {
-            console2.log("Building Signature");
-            signatures[i] = buildSignatureAsc(data, i);
+            console2.log("Building Signature with bytes:");
+            bytes memory signature = buildSignatureAsc(data, i);
+            console2.log(signature.length);
+            signatures[i] = signature;
         }
+        console2.log("Signature array length:");
+        console2.log(signatures.length);
+        console2.log("Signature Length:");
+        console2.log(signatures[0].length);
+        console2.log("Bytes of all signatures:");
+        console2.log(abi.encode(signatures).length);
         return signatures;
     }
 
-    function buildSignaturesDesc(bytes memory data) public view returns (bytes[] memory) {
+    function encodeSignatures(bytes[] memory signatures) public pure returns (bytes memory) {
+        require(signatures.length == 10, "There must be exactly 10 signatures");
+
+        bytes memory concatenatedSignatures;
+        for (uint i = 0; i < signatures.length; i++) {
+            require(signatures[i].length == 65, "Each signature must be 65 bytes long");
+            concatenatedSignatures = abi.encodePacked(concatenatedSignatures, signatures[i]);
+        }
+
+        return concatenatedSignatures;
+    }
+
+    function buildSignaturesDesc(bytes memory data) public returns (bytes[] memory) {
         bytes[] memory signatures = new bytes[](privKeyDesc.length);
         for (uint256 i = 0; i < signatures.length; i++) {
             signatures[i] = buildSignatureDesc(data, i);
@@ -247,6 +221,11 @@ contract ContractTest is Test {
         overrideHook = new TestPostDispatchHook();
         mailbox = new Mailbox(uint32(chainId));
 
+        _message = new MessageMock();
+
+        buildValidatorArrayAscending(10);
+        buildValidatorArrayDescending(10);
+
         token = new OmniToken(admin, admin, "OmniToken", "OMNI");
         minterRole = token.MINTER_ROLE();
         warpISM = new WarpISM(_NAME, _VERSION, admin);
@@ -254,15 +233,12 @@ contract ContractTest is Test {
         mintController =
             new wPOKTMintController(address(mailbox), address(token), address(warpISM), admin, limit, mintPerSecond);
         vm.startPrank(admin);
-        token.grantRole(minterRole, address(this));
+        token.grantRole(minterRole, address(mintController));
         token.updateController(address(mintController));
-        for (uint256 i = 0; i < signers.length; i++) {
-            warpISM.addValidator(signers[i]);
+        for (uint256 i = 0; i < validAddressAsc.length; i++) {
+            warpISM.addValidator(validAddressAsc[i]);
         }
         MESSAGE_TYPE_HASH = warpISM.DIGEST_TYPE_HASH();
-        setTypeHashes();
-        buildValidatorArrayAscending(10);
-        buildValidatorArrayDescending(10);
 
         vm.label(address(warpISM), "WarpISM");
         vm.label(address(token), "Omni Token");
@@ -274,14 +250,13 @@ contract ContractTest is Test {
     }
 
     function testMint() public {
-        console.log("WTF1");
+        uint8 version = mailbox.VERSION();
         bytes memory messageBody = buildMessageBody(address(1000), 1000 ether, address(1000));
-        bytes memory message = buildMintData(1, 1, 1, address(1000), uint32(_cachedChainId), admin, messageBody);
-        console.log("WTF2");
+        bytes memory message = buildMintData(version, 1, 1, address(1000), mailbox.localDomain(), address(mintController), messageBody);
         bytes[] memory signatureArray = buildSignaturesAsc(message);
-        console.log("WTF3");
-        bytes memory signatures = abi.encode(signatureArray);
-        console.log("WTF");
-        mintController.fulfillOrder(signatures, message);
+        bytes memory concatenatedSignatures = encodeSignatures(signatureArray);
+        console2.log("Concatenated Signatures Length:");
+        console2.log(concatenatedSignatures.length);
+        mintController.fulfillOrder(concatenatedSignatures, message);
     }
 }
