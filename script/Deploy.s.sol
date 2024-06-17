@@ -111,7 +111,6 @@ contract DeployScript is Script {
 
         _warpISM.setSignerThreshold(_config.signerThreshold);
 
-
         console2.log("Deploying AccountFactory");
         _accountFactory = new AccountFactory();
         console2.log("Deployed AccountFactory at: ", address(_accountFactory));

@@ -71,6 +71,9 @@ abstract contract WarpMintController is AccessControl, IWarpController {
         virtual
     {
         (, uint256 amount, address sender) = abi.decode(messageBody, (address, uint256, address));
+        if (sender != msg.sender) {
+            revert SenderMustBeCaller();
+        }
         _token.burnFrom(sender, amount);
         // Initiate the order through the mailbox
         // The backend consumes the dispatch event emitted by the mailbox

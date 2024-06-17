@@ -6,7 +6,8 @@ import {TypeCasts} from "@hyperlane/libs/TypeCasts.sol";
 /**
  * @title Hyperlane Message Library
  * @notice Library for formatted messages used by Mailbox
- **/
+ *
+ */
 contract MessageMock {
     using TypeCasts for bytes32;
 
@@ -39,16 +40,7 @@ contract MessageMock {
         bytes32 _recipient,
         bytes calldata _messageBody
     ) public pure returns (bytes memory) {
-        return
-            abi.encodePacked(
-                _version,
-                _nonce,
-                _originDomain,
-                _sender,
-                _destinationDomain,
-                _recipient,
-                _messageBody
-            );
+        return abi.encodePacked(_version, _nonce, _originDomain, _sender, _destinationDomain, _recipient, _messageBody);
     }
 
     /**
@@ -101,9 +93,7 @@ contract MessageMock {
      * @param _message ABI encoded Hyperlane message.
      * @return Sender of `_message` as address
      */
-    function senderAddress(
-        bytes calldata _message
-    ) public pure returns (address) {
+    function senderAddress(bytes calldata _message) public pure returns (address) {
         return sender(_message).bytes32ToAddress();
     }
 
@@ -112,9 +102,7 @@ contract MessageMock {
      * @param _message ABI encoded Hyperlane message.
      * @return Destination domain of `_message`
      */
-    function destination(
-        bytes calldata _message
-    ) public pure returns (uint32) {
+    function destination(bytes calldata _message) public pure returns (uint32) {
         return uint32(bytes4(_message[DESTINATION_OFFSET:RECIPIENT_OFFSET]));
     }
 
@@ -123,9 +111,7 @@ contract MessageMock {
      * @param _message ABI encoded Hyperlane message.
      * @return Recipient of `_message` as bytes32
      */
-    function recipient(
-        bytes calldata _message
-    ) public pure returns (bytes32) {
+    function recipient(bytes calldata _message) public pure returns (bytes32) {
         return bytes32(_message[RECIPIENT_OFFSET:BODY_OFFSET]);
     }
 
@@ -134,9 +120,7 @@ contract MessageMock {
      * @param _message ABI encoded Hyperlane message.
      * @return Recipient of `_message` as address
      */
-    function recipientAddress(
-        bytes calldata _message
-    ) public pure returns (address) {
+    function recipientAddress(bytes calldata _message) public pure returns (address) {
         return recipient(_message).bytes32ToAddress();
     }
 
@@ -145,9 +129,7 @@ contract MessageMock {
      * @param _message ABI encoded Hyperlane message.
      * @return Body of `_message`
      */
-    function body(
-        bytes calldata _message
-    ) public pure returns (bytes calldata) {
+    function body(bytes calldata _message) public pure returns (bytes calldata) {
         return bytes(_message[BODY_OFFSET:]);
     }
 }

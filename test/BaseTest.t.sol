@@ -10,10 +10,12 @@ import {wPOKTMintController} from "@src/wPOKTMintController.sol";
 import {Mailbox} from "@hyperlane/Mailbox.sol";
 import {OmniToken} from "@src/OmniToken.sol";
 import {WarpISM, ECDSA} from "@src/WarpISM.sol";
+import {IWarpISM} from "@interfaces/IWarpISM.sol";
+import {IInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecurityModule.sol";
 import "@hyperlane/test/TestPostDispatchHook.sol";
 import "@hyperlane/test/TestRecipient.sol";
 
-contract ContractTest is Test {
+contract BaseTest is Test {
     using Message for bytes;
     using TypeCasts for bytes32;
     using TypeCasts for address;
@@ -133,7 +135,7 @@ contract ContractTest is Test {
         }
     }
 
-    function getDigest(bytes memory message) public returns (bytes32 digest) {
+    function getDigest(bytes memory message) public view returns (bytes32 digest) {
         digest = warpISM.getDigest(message);
     }
 
@@ -158,7 +160,6 @@ contract ContractTest is Test {
     }
 
     function buildSignatureAsc(bytes memory message, uint256 signerIndex) public view returns (bytes memory) {
-        console2.log("Hashing digest:");
         bytes32 digest = warpISM.getDigest(message);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKeyAsc[signerIndex], digest);
@@ -167,7 +168,6 @@ contract ContractTest is Test {
     }
 
     function buildSignatureDesc(bytes memory message, uint256 signerIndex) public view returns (bytes memory) {
-
         bytes32 digest = warpISM.getDigest(message);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKeyDesc[signerIndex], digest);
@@ -175,21 +175,12 @@ contract ContractTest is Test {
         return signature;
     }
 
-    function buildSignaturesAsc(bytes memory data) public returns (bytes[] memory) {
-        console2.log("Building Ascending Signatures");
+    function buildSignaturesAsc(bytes memory data) public view returns (bytes[] memory) {
         bytes[] memory signatures = new bytes[](privKeyAsc.length);
         for (uint256 i = 0; i < signatures.length; i++) {
-            console2.log("Building Signature with bytes:");
             bytes memory signature = buildSignatureAsc(data, i);
-            console2.log(signature.length);
             signatures[i] = signature;
         }
-        console2.log("Signature array length:");
-        console2.log(signatures.length);
-        console2.log("Signature Length:");
-        console2.log(signatures[0].length);
-        console2.log("Bytes of all signatures:");
-        console2.log(abi.encode(signatures).length);
         return signatures;
     }
 
@@ -197,7 +188,7 @@ contract ContractTest is Test {
         require(signatures.length == 10, "There must be exactly 10 signatures");
 
         bytes memory concatenatedSignatures;
-        for (uint i = 0; i < signatures.length; i++) {
+        for (uint256 i = 0; i < signatures.length; i++) {
             require(signatures[i].length == 65, "Each signature must be 65 bytes long");
             concatenatedSignatures = abi.encodePacked(concatenatedSignatures, signatures[i]);
         }
@@ -205,7 +196,7 @@ contract ContractTest is Test {
         return concatenatedSignatures;
     }
 
-    function buildSignaturesDesc(bytes memory data) public returns (bytes[] memory) {
+    function buildSignaturesDesc(bytes memory data) public view returns (bytes[] memory) {
         bytes[] memory signatures = new bytes[](privKeyDesc.length);
         for (uint256 i = 0; i < signatures.length; i++) {
             signatures[i] = buildSignatureDesc(data, i);
@@ -213,7 +204,7 @@ contract ContractTest is Test {
         return signatures;
     }
 
-    function setUp() public {
+    function setUp() public virtual {
         uint256 chainId = block.chainid;
         feeRecipient = new TestRecipient();
         defaultHook = new TestPostDispatchHook();
@@ -252,11 +243,10 @@ contract ContractTest is Test {
     function testMint() public {
         uint8 version = mailbox.VERSION();
         bytes memory messageBody = buildMessageBody(address(1000), 1000 ether, address(1000));
-        bytes memory message = buildMintData(version, 1, 1, address(1000), mailbox.localDomain(), address(mintController), messageBody);
+        bytes memory message =
+            buildMintData(version, 1, 1, address(1000), mailbox.localDomain(), address(mintController), messageBody);
         bytes[] memory signatureArray = buildSignaturesAsc(message);
         bytes memory concatenatedSignatures = encodeSignatures(signatureArray);
-        console2.log("Concatenated Signatures Length:");
-        console2.log(concatenatedSignatures.length);
         mintController.fulfillOrder(concatenatedSignatures, message);
     }
 }
