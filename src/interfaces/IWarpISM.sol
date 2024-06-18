@@ -4,7 +4,7 @@ pragma solidity >=0.8.20;
 interface IWarpISM {
 
     error InvalidSignatureRatio();
-    error InvalidSignatures();
+    error CountBelowThreshold();
     error InvalidRemoveValidator();
     error InvalidAddValidator();
     error InvalidSignatureLength();

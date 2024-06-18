@@ -82,7 +82,7 @@ contract WarpISM is EIP712, IWarpISM, Ownable {
         uint256 signatureCount = signatures.length;
 
         if (signatureCount < signerThreshold) {
-            revert InvalidSignatures();
+            revert CountBelowThreshold();
         }
 
         for (uint256 i = 0; i < signatureCount;) {

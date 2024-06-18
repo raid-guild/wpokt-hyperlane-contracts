@@ -185,11 +185,9 @@ contract BaseTest is Test {
     }
 
     function encodeSignatures(bytes[] memory signatures) public pure returns (bytes memory) {
-        require(signatures.length == 10, "There must be exactly 10 signatures");
 
         bytes memory concatenatedSignatures;
         for (uint256 i = 0; i < signatures.length; i++) {
-            require(signatures[i].length == 65, "Each signature must be 65 bytes long");
             concatenatedSignatures = abi.encodePacked(concatenatedSignatures, signatures[i]);
         }
 
