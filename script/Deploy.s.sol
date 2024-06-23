@@ -11,6 +11,7 @@ import {WarpISM} from "src/WarpISM.sol";
 import {OmniToken} from "src/OmniToken.sol";
 import {wPOKTMintController} from "src/wPOKTMintController.sol";
 import {AccountFactory} from "src/Account.sol";
+import {Multicall3} from "src/Multicall3.sol";
 import {TestPostDispatchHook} from "@hyperlane/test/TestPostDispatchHook.sol";
 
 contract DeployScript is Script {
@@ -24,6 +25,7 @@ contract DeployScript is Script {
     OmniToken internal _token;
     wPOKTMintController internal _mintController;
     AccountFactory internal _accountFactory;
+    Multicall3 internal _multicall3;
     uint32 internal _chainId;
     uint256 internal _nonce;
 
@@ -66,7 +68,6 @@ contract DeployScript is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         address _predictedDefaultIsm = vm.computeCreateAddress(_deployer, _nonce++);
-        console2.log("Deploying PausableIsm at: ", _predictedDefaultIsm);
         _defaultIsm = new PausableIsm(_owner);
         console2.log("Deployed PausableIsm at: ", address(_defaultIsm));
         assert(address(_defaultIsm) == _predictedDefaultIsm);
@@ -74,9 +75,9 @@ contract DeployScript is Script {
         defaultHook = new TestPostDispatchHook();
         requiredHook = new TestPostDispatchHook();
         overrideHook = new TestPostDispatchHook();
+        _nonce += 3;
 
         address _predictedMailbox = vm.computeCreateAddress(_deployer, _nonce++);
-        console2.log("Deploying Mailbox at: ", _predictedMailbox);
         _mailbox = new Mailbox(_chainId);
         _mailbox.initialize(_owner, address(_defaultIsm), address(defaultHook), address(requiredHook));
         console2.log("Deployed Mailbox at: ", address(_mailbox));
@@ -85,7 +86,6 @@ contract DeployScript is Script {
         _nonce += 1;
 
         address _predictWarpISM = vm.computeCreateAddress(_deployer, _nonce++);
-        console2.log("Deploying WarpISM at: ", _predictWarpISM);
         _warpISM = new WarpISM("WarpISM", "1", _owner);
         console2.log("Deployed WarpISM at: ", address(_warpISM));
         assert(address(_warpISM) == _predictWarpISM);
@@ -93,12 +93,10 @@ contract DeployScript is Script {
         address _predictedToken = vm.computeCreateAddress(_deployer, _nonce++);
         address _predictedMintController = vm.computeCreateAddress(_deployer, _nonce++);
 
-        console2.log("Deploying Token at: ", _predictedToken);
         _token = new OmniToken(_owner, address(_predictedMintController), "Wrapped POKT", "wPOKT");
         console2.log("Deployed Token at: ", address(_token));
         assert(address(_token) == _predictedToken);
 
-        console2.log("Deploying MintController at: ", _predictedMintController);
         _mintController = new wPOKTMintController(
             address(_mailbox), address(_token), address(_warpISM), _owner, _mintLimit, _mintPerSecond
         );
@@ -108,12 +106,19 @@ contract DeployScript is Script {
         for (uint256 i = 0; i < _config.validators.length; i++) {
             _warpISM.addValidator(_config.validators[i]);
         }
+        console2.log("Validators added to WarpISM");
 
         _warpISM.setSignerThreshold(_config.signerThreshold);
+        console2.log("Signer threshold set to: ", _config.signerThreshold);
 
-        console2.log("Deploying AccountFactory");
         _accountFactory = new AccountFactory();
         console2.log("Deployed AccountFactory at: ", address(_accountFactory));
+
+        _multicall3 = new Multicall3();
+        console2.log("Deployed Multicall3 at: ", address(_multicall3));
+
+        _token.grantRole(_token.MINTER_ROLE(), address(_mintController));
+        console2.log("MINTER_ROLE granted to MintController");
 
         vm.stopBroadcast();
     }

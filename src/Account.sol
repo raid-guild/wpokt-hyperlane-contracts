@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import { CallUtils } from "./CallUtils.sol";
+
 contract Account {
     uint256 public state;
     address public owner;
@@ -11,12 +13,12 @@ contract Account {
     error InvalidOperation();
     error ExecutionFailed();
 
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable {}
-
     constructor(address _owner) {
         owner = _owner;
     }
+
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable {}
 
     function execute(address to, uint256 value, bytes calldata data, uint256 operation)
         external
@@ -42,7 +44,7 @@ contract Account {
         }
 
         if (!success) {
-            revert ExecutionFailed();
+            CallUtils.revertFromReturnedData(result);
         }
 
         emit Executed();
@@ -50,9 +52,9 @@ contract Account {
 }
 
 contract AccountFactory {
-    event AccountCreated(address account);
-
     mapping(address => address) public accounts;
+
+    event AccountCreated(address account);
 
     function getAccount() external returns (address account) {
         account = accounts[msg.sender];
