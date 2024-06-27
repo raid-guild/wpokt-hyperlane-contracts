@@ -14,7 +14,10 @@ verbosity = 4
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC}"
 sepolia = "${SEPOLIA_RPC}"
+holesky = "${HOLESKY_RPC}"
 
 [etherscan]
 mainnet = {key = "${ETHERSCAN_KEY}"}
 sepolia = {key = "${ETHERSCAN_KEY}"}
+holesky = {key = "${ETHERSCAN_KEY}"}
+

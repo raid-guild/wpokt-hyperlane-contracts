@@ -185,7 +185,6 @@ contract BaseTest is Test {
     }
 
     function encodeSignatures(bytes[] memory signatures) public pure returns (bytes memory) {
-
         bytes memory concatenatedSignatures;
         for (uint256 i = 0; i < signatures.length; i++) {
             concatenatedSignatures = abi.encodePacked(concatenatedSignatures, signatures[i]);

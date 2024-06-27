@@ -14,7 +14,7 @@ import {AccountFactory} from "src/Account.sol";
 import {Multicall3} from "src/Multicall3.sol";
 import {TestPostDispatchHook} from "@hyperlane/test/TestPostDispatchHook.sol";
 
-contract DeployScript is Script {
+contract TestnetDeployScript is Script {
     constructor() {}
 
     address internal _deployer;
@@ -24,17 +24,13 @@ contract DeployScript is Script {
     WarpISM internal _warpISM;
     OmniToken internal _token;
     wPOKTMintController internal _mintController;
-    AccountFactory internal _accountFactory;
-    Multicall3 internal _multicall3;
     uint32 internal _chainId;
-    uint256 internal _nonce;
-
-    TestPostDispatchHook defaultHook;
-    TestPostDispatchHook overrideHook;
-    TestPostDispatchHook requiredHook;
+    TestPostDispatchHook internal _defaultHook;
 
     uint256 internal constant _mintLimit = 10 ** 18;
     uint256 internal constant _mintPerSecond = 10 ** 16;
+
+    bytes32 internal constant _SALT = keccak256("POKT");
 
     struct NetworkConfig {
         address[] validators;
@@ -43,23 +39,22 @@ contract DeployScript is Script {
 
     NetworkConfig internal _config;
 
-    function getAnvilEthConfig() internal pure returns (NetworkConfig memory anvilNetworkConfig) {
+    function getTestnetEthConfig() internal pure returns (NetworkConfig memory anvilNetworkConfig) {
         address[] memory validators = new address[](3);
-        validators[0] = address(0x0E90A32Df6f6143F1A91c25d9552dCbc789C34Eb);
-        validators[1] = address(0x958d1F55E14Cba24a077b9634F16f83565fc9411);
-        validators[2] = address(0x4c672Edd2ec8eac8f0F1709f33de9A2E786e6912);
+        validators[0] = address(0xf838e8bc158bB2A2142e899c048627e28cEDa9c0);
+        validators[1] = address(0x124A773FFE06822E6Aa0eBC13cdBce8709916234);
+        validators[2] = address(0x11D95B5933542f33F8476Eb2a4A9aDD47DF18BF0);
 
         anvilNetworkConfig = NetworkConfig({validators: validators, signerThreshold: 2});
     }
 
     function run() external {
-        _config = getAnvilEthConfig();
+        _config = getTestnetEthConfig();
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         _deployer = vm.addr(deployerPrivateKey);
         _chainId = uint32(block.chainid);
         _owner = _deployer;
-        _nonce = vm.getNonce(_deployer);
 
         console2.log("Deployer: ", _deployer);
         console2.log("Chain ID: ", _chainId);
@@ -67,41 +62,26 @@ contract DeployScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        address _predictedDefaultIsm = vm.computeCreateAddress(_deployer, _nonce++);
-        _defaultIsm = new PausableIsm(_owner);
+        _defaultIsm = new PausableIsm{salt: _SALT}(_owner);
         console2.log("Deployed PausableIsm at: ", address(_defaultIsm));
-        assert(address(_defaultIsm) == _predictedDefaultIsm);
 
-        defaultHook = new TestPostDispatchHook();
-        requiredHook = new TestPostDispatchHook();
-        overrideHook = new TestPostDispatchHook();
-        _nonce += 3;
+        _defaultHook = new TestPostDispatchHook{salt: _SALT}();
+        console2.log("Deployed TestPostDispatchHook at: ", address(_defaultHook));
 
-        address _predictedMailbox = vm.computeCreateAddress(_deployer, _nonce++);
-        _mailbox = new Mailbox(_chainId);
-        _mailbox.initialize(_owner, address(_defaultIsm), address(defaultHook), address(requiredHook));
+        _mailbox = new Mailbox{salt: _SALT}(_chainId);
+        _mailbox.initialize(_owner, address(_defaultIsm), address(_defaultHook), address(_defaultHook));
         console2.log("Deployed Mailbox at: ", address(_mailbox));
-        assert(address(_mailbox) == _predictedMailbox);
 
-        _nonce += 1;
-
-        address _predictWarpISM = vm.computeCreateAddress(_deployer, _nonce++);
-        _warpISM = new WarpISM("WarpISM", "1", _owner);
+        _warpISM = new WarpISM{salt: _SALT}("WarpISM", "1", _owner);
         console2.log("Deployed WarpISM at: ", address(_warpISM));
-        assert(address(_warpISM) == _predictWarpISM);
 
-        address _predictedToken = vm.computeCreateAddress(_deployer, _nonce++);
-        address _predictedMintController = vm.computeCreateAddress(_deployer, _nonce++);
-
-        _token = new OmniToken(_owner, address(_predictedMintController), "Wrapped POKT", "wPOKT");
+        _token = new OmniToken{salt: _SALT}(_owner, _owner, "Wrapped POKT", "wPOKT");
         console2.log("Deployed Token at: ", address(_token));
-        assert(address(_token) == _predictedToken);
 
-        _mintController = new wPOKTMintController(
+        _mintController = new wPOKTMintController{salt: _SALT}(
             address(_mailbox), address(_token), address(_warpISM), _owner, _mintLimit, _mintPerSecond
         );
         console2.log("Deployed MintController at: ", address(_mintController));
-        assert(address(_mintController) == _predictedMintController);
 
         for (uint256 i = 0; i < _config.validators.length; i++) {
             _warpISM.addValidator(_config.validators[i]);
@@ -110,12 +90,6 @@ contract DeployScript is Script {
 
         _warpISM.setSignerThreshold(_config.signerThreshold);
         console2.log("Signer threshold set to: ", _config.signerThreshold);
-
-        _accountFactory = new AccountFactory();
-        console2.log("Deployed AccountFactory at: ", address(_accountFactory));
-
-        _multicall3 = new Multicall3();
-        console2.log("Deployed Multicall3 at: ", address(_multicall3));
 
         _token.grantRole(_token.MINTER_ROLE(), address(_mintController));
         console2.log("MINTER_ROLE granted to MintController");

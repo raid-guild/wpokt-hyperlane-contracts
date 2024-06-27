@@ -6,6 +6,6 @@ anvil --mnemonic 'test test test test test test test test test test test junk' -
 
 sleep 5
 
-forge script DeployScript --rpc-url "http://127.0.0.1:${PORT}" --broadcast --silent
+forge script LocalDeployScript --rpc-url "http://127.0.0.1:${PORT}" --broadcast --silent
 
 fg %1

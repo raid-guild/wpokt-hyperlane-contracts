@@ -4,7 +4,6 @@ import {BaseTest} from "./BaseTest.t.sol";
 import {IInterchainSecurityModule} from "@hyperlane/interfaces/IInterchainSecurityModule.sol";
 
 contract WarpIsmTest is BaseTest {
-
     error InvalidSignatureRatio();
     error CountBelowThreshold();
     error InvalidRemoveValidator();
@@ -19,7 +18,7 @@ contract WarpIsmTest is BaseTest {
     event SignerThresholdSet(uint256 indexed ratio);
 
     function setUp() public virtual override {
-      super.setUp();
+        super.setUp();
     }
 
     function testGetISM() public view {
@@ -71,7 +70,7 @@ contract WarpIsmTest is BaseTest {
 
     function testDigestTypeHash() public view {
         bytes32 expected = keccak256(
-        "Message(uint8 version,uint32 nonce,uint32 originDomain,bytes32 sender,uint32 destinationDomain,bytes32 recipient,bytes messageBody)"
+            "Message(uint8 version,uint32 nonce,uint32 originDomain,bytes32 sender,uint32 destinationDomain,bytes32 recipient,bytes messageBody)"
         );
 
         bytes32 actual = warpISM.DIGEST_TYPE_HASH();
@@ -204,7 +203,15 @@ contract WarpIsmTest is BaseTest {
     }
 
     function testEIPDomain() public {
-        (bytes1 fields, string memory name, string memory version, uint256 chainId, address verifyingContract, bytes32 salt, uint256[] memory extensions) = warpISM.eip712Domain();
+        (
+            bytes1 fields,
+            string memory name,
+            string memory version,
+            uint256 chainId,
+            address verifyingContract,
+            bytes32 salt,
+            uint256[] memory extensions
+        ) = warpISM.eip712Domain();
         assertEq(fields, hex"0f");
         assertEq(name, "WarpISM");
         assertEq(version, "1.0");
@@ -218,5 +225,4 @@ contract WarpIsmTest is BaseTest {
         address owner = warpISM.owner();
         assertEq(owner, admin);
     }
-
 }

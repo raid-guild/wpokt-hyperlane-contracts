@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { CallUtils } from "./CallUtils.sol";
+import {CallUtils} from "./CallUtils.sol";
 
 contract Account {
     uint256 public state;
